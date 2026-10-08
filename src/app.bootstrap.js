@@ -1,11 +1,15 @@
 import express from "express";
 import connectionDb from "./DB/connectionDb.js";
 import userRouter from "./modules/users/user.controller.js";
+import cors from "cors";    
 
 const app=express();
 const port=3000;
 
 const bootstrap=async()=>{
+    app.use(cors({
+        origin:"*"
+    }))
 app.use(express.json());
 await connectionDb();
 app.get("/",(req,res,next)=>{
