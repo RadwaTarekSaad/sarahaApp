@@ -46,6 +46,7 @@ const userSchema=new mongoose.Schema({
         default:GenderEnum.male
      },
      profileImage:String,
+     coverImages:[String],
      phone:String,
       role:{
         type:String,
@@ -61,11 +62,14 @@ const userSchema=new mongoose.Schema({
         type:Boolean,
         default:false
 
-     }
-
-
-},{
-   timestamps:true,
+     },
+     changeCredentialAt:{
+      type:Date,
+    
+},
+},
+{
+  timestamps:true,
     strict:true,
     strictQuery:true,
     toJSON:{virtuals:true},
