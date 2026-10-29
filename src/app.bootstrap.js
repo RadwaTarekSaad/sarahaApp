@@ -2,6 +2,7 @@ import express from "express";
 import connectionDb from "./DB/connectionDb.js";
 import userRouter from "./modules/users/user.controller.js";
 import cors from "cors";    
+import { connectionRedis } from "./DB/connection.redis.js";
 
 const app=express();
 const port=3000;
@@ -12,6 +13,8 @@ const bootstrap=async()=>{
     }))
 app.use(express.json());
 await connectionDb();
+await connectionRedis();
+
 app.get("/",(req,res,next)=>{
     res.status(200).json({message:"welcome on sarahaApp.....😊"})
 });

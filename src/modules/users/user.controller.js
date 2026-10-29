@@ -4,13 +4,15 @@ import { multerLocal } from "../../common/middleware/multer.js";
 import { validation } from "../../common/middleware/validation.js";
 import * as US from "./user.service.js";
 import Router from "express";
-import { signInSchema, signUpSchema ,refreshTokenSchema,shareProfileSchema, updateProfileSchema, updatePasswordSchema} from "./user.validation.js";
+import { signInSchema, signUpSchema ,refreshTokenSchema,shareProfileSchema, updateProfileSchema, updatePasswordSchema, confirmEmailSchema} from "./user.validation.js";
 
 
 const userRouter=Router();
 userRouter.post("/signUP",
 
-    multerLocal({customPath:"Users",customTypes:["application/pdf"]}).fields([{name:"attachment"},{name:"attachments"}]),validation(signUpSchema),US.signUP);
+    multerLocal({customPath:"Users",customTypes:["application/pdf"]}).fields([{name:"attachment"},{name:"attachments"}]),
+    // validation(signUpSchema)
+    US.signUP);
 userRouter.post("/signIn",validation(signInSchema),US.signIn);
 userRouter.post("/signup/gmail",US.signUpWithGmail);
 userRouter.get("/getProfile",authentication,
@@ -23,6 +25,7 @@ userRouter.patch("/updatePassword",validation(updatePasswordSchema),authenticati
 
 
 userRouter.post("/refreshToken",validation(refreshTokenSchema),US.refreshToken);
+userRouter.post("/confirmEmail",validation(confirmEmailSchema),US.confirmEmail);
 userRouter.patch("/logout",authentication,US.logOut)
 
 

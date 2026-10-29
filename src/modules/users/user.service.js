@@ -1,6 +1,6 @@
 
 import { Decrypt, Encrypt } from "../../common/security/encrypt.js";
-import * as dbService from "../../DB/db.service.js";
+import * as dbService from "../../DB/service/db.service.js";
 import userModel from "../../DB/models/user.model.js"
 import { compare, Hash } from "../../common/security/hash.js";
 import jwt from "jsonwebtoken";
@@ -9,7 +9,10 @@ import { ProviderEnum } from "../../common/enum/user.enum.js";
 import joi from "joi";
 import { hash } from "bcrypt";
 import { randomUUID } from 'node:crypto';
-import revokeTokenModel from "../../DB/models/revokeToken.model.js";
+import { deleteKey, getValue, keys, setValue } from "../../DB/service/redis.service.js";
+import sendEmail, { generate_otp } from "../../common/service/sendEmail.js";
+import { eventEmitter } from "../../common/utils/events.js";
+
 const client = new OAuth2Client();
 export const signUpWithGmail = async (req, res, next) => {
   const { idToken } = req.body;
@@ -82,10 +85,52 @@ const paths=[];
 for(const file of req.files.attachments){
 paths.push(file.path)
 }
+ const otp=await generate_otp();
+ const otpHash=await Hash(otp,12);
+ await setValue({key:`otp::${email}`,value:otpHash,ttl:60*20});
+eventEmitter.emit("confirm_email",async()=>{
+await sendEmail({
+  to:email,
+  subject:"Confirm Email",
+  html:`<h1>otp:${otp}</h1>`
+ })
+})
  
 const user =await dbService.create({model:userModel,data:{fName,lName,email,password:await Hash(password),age,gender,phone:Encrypt(phone),profileImage:req.files.attachment[0].path,coverImages:paths.slice(1)}});
  
 return res.status(201).json({message:"Done",user})
+
+
+}
+export const confirmEmail=async(req,res,next)=>{
+
+
+ const{email,otp}=req.body
+ const otpValue=await getValue(`otp::${email}`);
+ if(!otpValue){
+   throw new Error("otp expired",{cause:400})
+ }
+
+ if(!compare(otp,otpValue)){
+     throw new Error("invalid otp",{cause:400})
+ }
+const user=await dbService.findOneAndUpdate({
+  model:userModel,
+  filter:{
+    email,
+    isConfirmed:false
+  },
+  update:{
+    isConfirmed:true
+  }
+})
+if(!user){
+    throw new Error("email not exist",{cause:404});
+   
+}
+await deleteKey(`otp::${email}`)
+ 
+return res.status(200).json({message:"Done",user})
 
 
 }
@@ -94,7 +139,7 @@ export const signIn=async(req,res,next)=>{
 
     const{email,password}=req.body
 
-const user =await dbService.findOne({model:userModel,filter:{email:email.toLowerCase(),provider:ProviderEnum.system}});
+const user =await dbService.findOne({model:userModel,filter:{email:email.toLowerCase(),isConfirmed:true,provider:ProviderEnum.system}});
 if(!user){
     throw new Error("email not exist you can signUp",{cause:404});
    
@@ -207,18 +252,26 @@ export const logOut=async(req,res,next)=>{
   if(flag==="all"){
   req.user.changeCredentialAt=new Date();
   await req.user.save();
+  await deleteKey(await keys(`revoke_token::${req.user._id}`))
  }
-  
- await dbService.create({
+  else{
+    await setValue({
+      key:`revoke_token::${req.user._id}::${req.decoded.jti}`,
+      value:`${req.decoded.jti}`,
+      ttl:req.decoded.exp - Math.floor((Date.now()/1000))
 
-  model:revokeTokenModel,
-  data:{
-    userId:req.user._id,
-    tokenId:req.decoded.jti,
-    expireAt:new Date(req.decoded.exp*1000)
-
+    })
   }
- })
+//  await dbService.create({
+
+//   model:revokeTokenModel,
+//   data:{
+//     userId:req.user._id,
+//     tokenId:req.decoded.jti,
+//     expireAt:new Date(req.decoded.exp*1000)
+
+//   }
+//  })
  return res.status(200).json({
   message:"Done"
  })

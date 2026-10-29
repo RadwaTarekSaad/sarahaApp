@@ -1,7 +1,8 @@
-import { findOne } from "../../DB/db.service.js";
-import revokeTokenModel from "../../DB/models/revokeToken.model.js";
+import { findOne } from "../../DB/service/db.service.js";
+
 import userModel from "../../DB/models/user.model.js";
 import jwt  from "jsonwebtoken";
+import { ttl } from "../../DB/service/redis.service.js";
 
 export const authentication=async(req,res,next)=>{
 const {authorization}=req.headers;
@@ -26,8 +27,12 @@ if(Math.floor(user.changeCredentialAt?.getTime()/1000) > decoded.iat){
     
 
 }
-if(await findOne({model:revokeTokenModel,filter:{tokenId:decoded.jti}})){
-    throw new Error("token revoked login again",{cause:400})
+// if(await findOne({model:revokeTokenModel,filter:{tokenId:decoded.jti}})){
+//     throw new Error("token revoked login again",{cause:400})
+// }
+
+if(await ttl(`revoke_token::${user._id}::${decoded.jti}` > 0)){
+     throw new Error("token revoked login again",{cause:400})
 }
 req.user=user;
 req.decoded=decoded;
