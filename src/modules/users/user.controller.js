@@ -11,7 +11,7 @@ const userRouter=Router();
 userRouter.post("/signUP",
 
     multerLocal({customPath:"Users",customTypes:["application/pdf"]}).fields([{name:"attachment"},{name:"attachments"}]),
-    // validation(signUpSchema)
+    validation(signUpSchema),
     US.signUP);
 userRouter.post("/signIn",validation(signInSchema),US.signIn);
 userRouter.post("/signup/gmail",US.signUpWithGmail);

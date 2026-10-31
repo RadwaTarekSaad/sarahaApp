@@ -10,6 +10,6 @@ return await model.findById(id,options)
 export const findByIdAndUpdate=async({model,id,update,options={}}={})=>{
 return await model.findByIdAndUpdate(id,update,{new:true,runValidators:true,...options})
 }
-export const findOneAndUpdate=async({model,filter,update,options={}})=>{
-return await model.findByIdAndUpdate(filter,update,{new:true,runValidators:true,...options})
+export const findOneAndUpdate=async({model,filter,update,options={}}={})=>{
+return await model.findOneAndUpdate(filter,update,{new:true,runValidators:true,...options})
 }
