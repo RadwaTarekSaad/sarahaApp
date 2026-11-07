@@ -67,3 +67,16 @@ export const  confirmEmailSchema={
    otp:joi.string().pattern(/^[0-9]{6}$/).required()
   }).required()
 }
+
+export const resetPasswordSchema={
+  body:joi.object({
+    email:joi.string().required(),
+    code:joi.string().pattern(/^[0-9]{6}$/).required(),
+    password:generalRules.password.required()
+  }).required()
+}
+export const forgetPasswordSchema={
+  body:joi.object({
+    email:joi.string().required()
+  }).required()
+}

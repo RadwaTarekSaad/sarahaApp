@@ -3,30 +3,83 @@ import { authorization } from "../../common/middleware/authorization.js";
 import { multerLocal } from "../../common/middleware/multer.js";
 import { validation } from "../../common/middleware/validation.js";
 import * as US from "./user.service.js";
-import Router from "express";
-import { signInSchema, signUpSchema ,refreshTokenSchema,shareProfileSchema, updateProfileSchema, updatePasswordSchema, confirmEmailSchema} from "./user.validation.js";
+import { Router } from "express";
+import {
+  signInSchema,
+  signUpSchema,
+  refreshTokenSchema,
+  shareProfileSchema,
+  updateProfileSchema,
+  updatePasswordSchema,
+  confirmEmailSchema,
+  resetPasswordSchema,
+  forgetPasswordSchema,
+} from "./user.validation.js";
+import messageRouter from "../message/message.controller.js";
+
+const userRouter = Router({ caseSensitive: true, strict: true });
 
 
-const userRouter=Router();
-userRouter.post("/signUP",
-
-    multerLocal({customPath:"Users",customTypes:["application/pdf"]}).fields([{name:"attachment"},{name:"attachments"}]),
-    validation(signUpSchema),
-    US.signUP);
-userRouter.post("/signIn",validation(signInSchema),US.signIn);
-userRouter.post("/signup/gmail",US.signUpWithGmail);
-userRouter.get("/getProfile",authentication,
-    // authorization(["user","admin"]),
-    US.getProfile);
-
-userRouter.get("/shareProfile/:id",validation(shareProfileSchema),US.shareProfile);
-userRouter.patch("/updateProfile",validation(updateProfileSchema),authentication,US.updateProfile);
-userRouter.patch("/updatePassword",validation(updatePasswordSchema),authentication,US.updatePassword);
+userRouter.use("/:userId/messages",messageRouter)
 
 
-userRouter.post("/refreshToken",validation(refreshTokenSchema),US.refreshToken);
-userRouter.post("/confirmEmail",validation(confirmEmailSchema),US.confirmEmail);
-userRouter.patch("/logout",authentication,US.logOut)
+userRouter.post(
+  "/signUP",
 
+  multerLocal({ customPath: "Users", customTypes: ["application/pdf"] }).fields(
+    [{ name: "attachment" }, { name: "attachments" }],
+  ),
+  validation(signUpSchema),
+  US.signUP,
+);
+userRouter.post("/signIn", validation(signInSchema), US.signIn);
+userRouter.post("/signup/gmail", US.signUpWithGmail);
+userRouter.get(
+  "/getProfile",
+  authentication,
+  // authorization(["user","admin"]),
+  US.getProfile,
+);
 
-export default userRouter
+userRouter.get(
+  "/shareProfile/:id",
+  validation(shareProfileSchema),
+  US.shareProfile,
+);
+userRouter.patch(
+  "/updateProfile",
+  validation(updateProfileSchema),
+  authentication,
+  US.updateProfile,
+);
+userRouter.patch(
+  "/updatePassword",
+  validation(updatePasswordSchema),
+  authentication,
+  US.updatePassword,
+);
+userRouter.patch("/reSend_otp", validation(forgetPasswordSchema), US.reSendOtp);
+userRouter.patch(
+  "/forgetPassword",
+  validation(forgetPasswordSchema),
+  US.forgetPassword,
+);
+userRouter.patch(
+  "/resetPassword",
+  validation(resetPasswordSchema),
+  US.resetPassword,
+);
+
+userRouter.post(
+  "/refreshToken",
+  validation(refreshTokenSchema),
+  US.refreshToken,
+);
+userRouter.post(
+  "/confirmEmail",
+  validation(confirmEmailSchema),
+  US.confirmEmail,
+);
+userRouter.patch("/logout", authentication, US.logOut);
+
+export default userRouter;

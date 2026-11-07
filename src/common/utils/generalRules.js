@@ -1,8 +1,10 @@
 import joi from "joi";
+import mongoose from "mongoose";
+
 
 export const generalRules = {
      id:joi.string().custom((value,helper)=>{
-        return Types.objectId.isValid(value)?value:helper.message("invalid id")
+        return mongoose.Types.ObjectId.isValid(value)?value:helper.message("invalid id")
      }),
     email:joi.string().email({minDomainSegments: 2,maxDomainSegments: 2}),
     password:joi.string(),

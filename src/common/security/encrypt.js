@@ -1,11 +1,13 @@
 import crypto from "node:crypto"
-const ENCRYPTION_KEY = Buffer.from("12345678901234567890123456789012"); 
+import { ENCRYPTION_KEY } from "../../../config/config.service.js";
+
+const eNCRYPTIONKEY= Buffer.from(ENCRYPTION_KEY); 
 const IV_LENGTH = 16; 
 
 export function Encrypt(plainText) {
     const iv = crypto.randomBytes(IV_LENGTH);
 
-    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+    const cipher = crypto.createCipheriv('aes-256-cbc', eNCRYPTIONKEY, iv);
 
     let encrypted = cipher.update(plainText, 'utf8', 'hex');
 
